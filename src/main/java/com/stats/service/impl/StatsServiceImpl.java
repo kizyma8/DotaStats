@@ -135,26 +135,36 @@ public class StatsServiceImpl implements StatsService {
         return killsDto;
     }
 
-    public void couriersKills(KillsDto killsDto, Map params, int matchCount) {
+    private void couriersKills(KillsDto killsDto, Map params, int matchCount) {
         JSONObject json = null;
         try {
             String quary = quaryBuilder.buildCourierKillsQuary(params);
             json = httpConnection.get("https://api.opendota.com/api/explorer", quary);
             int matchesWithCouriersKills = 0;
+            int roshanKills = 0;
+            boolean breakCounting = false;
             for (int i = 0; i < json.getJSONArray("rows").length(); i++) {
+                breakCounting = false;
                 for(int j = 0; j < json.getJSONArray("rows").getJSONObject(i).getJSONArray("objectives").length(); j++) {
-                    if("CHAT_MESSAGE_COURIER_LOST".equals(json.getJSONArray("rows").getJSONObject(i).getJSONArray("objectives").getJSONObject(j).get("type"))) {
+                    if(!breakCounting && "CHAT_MESSAGE_COURIER_LOST".equals(json.getJSONArray("rows").getJSONObject(i).getJSONArray("objectives").getJSONObject(j).get("type"))) {
                         matchesWithCouriersKills++;
-                        break;
+                        breakCounting = true;
+                    }
+                    if("CHAT_MESSAGE_ROSHAN_KILL".equals(json.getJSONArray("rows").getJSONObject(i).getJSONArray("objectives").getJSONObject(j).get("type"))) {
+                        roshanKills++;
                     }
                 }
             }
             killsDto.setCouriersKills(matchesWithCouriersKills,matchCount);
+            roshansKillls(killsDto,roshanKills,matchCount);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
     }
 
+    private void roshansKillls(KillsDto killsDto, int kills, int matchCount) {
+        killsDto.setAvgRoshanKillsPerMatch(kills, matchCount);
+    }
     private void buildDurationDto(DurationDto durationDto, JSONObject json, Map params) {
         int matchCountTeam1 = (Integer) json.getJSONArray("rows").getJSONObject(0).get("count");
         int matchCountTeam2 = 0;

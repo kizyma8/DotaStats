@@ -90,6 +90,11 @@
                             <h2 style="text-align: center"><span>${killsDto.couriersKills}%</span> </h2>
                         </div>
 
+                        <div class="bs-callout bs-callout-danger">
+                            <h4>Total Roshan Kills: </h4>
+                            <h2 style="text-align: center"><span>${killsDto.avgRoshanKillsPerMatch}</span> </h2>
+                        </div>
+
                     <c:if test="${killsDto.firstTeamFBPercent > 0}">
                         <div class="bs-callout bs-callout-danger">
                             <h4>First Blood: </h4>

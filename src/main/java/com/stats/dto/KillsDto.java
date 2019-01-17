@@ -11,6 +11,7 @@ public class KillsDto {
     private int firstTeamFBPercent;
     private int secondTeamFBPercent;
     private int couriersKills;
+    private int avgRoshanKillsPerMatch;
 
     public int getTotalKills() {
         return totalKills;
@@ -25,7 +26,7 @@ public class KillsDto {
     }
 
     public void setTotalKillsPercent(int totalKillsPercent, int matchCount) {
-        this.totalKillsPercent = totalKillsPercent * 100 / matchCount;
+        this.totalKillsPercent = totalKillsPercent * 100 / ((matchCount > 0) ? matchCount : 1);
     }
 
     public int getKills() {
@@ -33,7 +34,7 @@ public class KillsDto {
     }
 
     public void setKills(int kills, int matchCount) {
-        this.kills = kills / matchCount;
+        this.kills = kills / ((matchCount > 0) ? matchCount : 1);
     }
 
     public int getFirstTeamFBPercent() {
@@ -57,7 +58,7 @@ public class KillsDto {
     }
 
     public void setKillsTeam1(int killsTeam1, int matchCount) {
-        this.killsTeam1 = killsTeam1 / matchCount;
+        this.killsTeam1 = killsTeam1 / ((matchCount > 0) ? matchCount : 1);
     }
 
     public int getKillsTeam2() {
@@ -65,7 +66,7 @@ public class KillsDto {
     }
 
     public void setKillsTeam2(int killsTeam2, int matchCount) {
-        this.killsTeam2 = killsTeam2 / matchCount;
+        this.killsTeam2 = killsTeam2 / ((matchCount > 0) ? matchCount : 1);
     }
 
     public int getTotalKillsPercentTeam1() {
@@ -73,7 +74,7 @@ public class KillsDto {
     }
 
     public void setTotalKillsPercentTeam1(int totalKillsPercentTeam1, int matchCount) {
-        this.totalKillsPercentTeam1 = totalKillsPercentTeam1 * 100 / ((matchCount > 0) ? matchCount : 0) ;;
+        this.totalKillsPercentTeam1 = totalKillsPercentTeam1 * 100 / ((matchCount > 0) ? matchCount : 1) ;;
     }
 
     public int getTotalKillsPercentTeam2() {
@@ -90,5 +91,13 @@ public class KillsDto {
 
     public void setCouriersKills(int couriersKills, int matchCount) {
         this.couriersKills = couriersKills * 100 / ((matchCount > 0) ? matchCount : 0);
+    }
+
+    public int getAvgRoshanKillsPerMatch() {
+        return avgRoshanKillsPerMatch;
+    }
+
+    public void setAvgRoshanKillsPerMatch(int avgRoshanKillsPerMatch, int matchCount) {
+        this.avgRoshanKillsPerMatch = avgRoshanKillsPerMatch / ((matchCount > 0) ? matchCount : 0);
     }
 }
