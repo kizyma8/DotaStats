@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiPredicate;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Service
@@ -37,7 +39,6 @@ public class KillsStatsService implements StatsService {
         try {
             killsDto = new KillsDto();
             String quary = quaryBuilder.buildQueryForKills(params);
-//            String quary = quaryBuilder.buildCourierKillsQuary(params);
             JSONObject baseStats = httpConnection.get("https://api.opendota.com/api/explorer", quary);
             buildKillsDto(killsDto, baseStats, params);
         } catch (Exception ex) {
@@ -60,15 +61,15 @@ public class KillsStatsService implements StatsService {
         int matchesHigherThenSpecifiedTeam1 = 0;
         int matchesHigherThenSpecifiedTeam2 = 0;
         List<Long> matchIds = new ArrayList<>();
-
+        BiPredicate<Integer,Integer> isEquals = Integer::equals;
         for (int i = 0; i < json.getJSONArray("rows").length(); i++) {
             total = (Integer) json.getJSONArray("rows").getJSONObject(i).get("total");
             matchIds.add((Long) json.getJSONArray("rows").getJSONObject(i).get("match_id"));
 
-            if (json.getJSONArray("rows").getJSONObject(i).get("team_id").equals(params.get("teamId"))) {
+            if (isEquals.test((Integer) json.getJSONArray("rows").getJSONObject(i).get("team_id"),(Integer) params.get("teamId"))) {
                 killsTeam1 += total;
                 matchesHigherThenSpecifiedTeam1++;
-            } else if(json.getJSONArray("rows").getJSONObject(i).get("team_id").equals(params.get("teamId2"))){
+            } else if(isEquals.test((Integer) json.getJSONArray("rows").getJSONObject(i).get("team_id"),(Integer) params.get("teamId2"))){
                 killsTeam2 += total;
                 matchesHigherThenSpecifiedTeam2++;
             }
@@ -130,7 +131,7 @@ public class KillsStatsService implements StatsService {
     private void buildKillsStats(List<Long> ids, Integer firstTeamId, Integer secondTeamId, KillsDto killsDto) {
         List<Map<Integer, Boolean>> stats = new ArrayList<>();
         Integer teamId = null;
-        for (Long id : ids) {
+        ids.forEach(id -> {
             boolean fbRadiant = false;
             Map<Integer, Boolean> teams = new HashMap<>();
             JSONObject match = httpConnection.get("https://api.opendota.com/api/matches/" + id, "");
@@ -144,9 +145,9 @@ public class KillsStatsService implements StatsService {
             }
             fillInFBMap(teams, firstTeamId, secondTeamId, fbRadiant, match);
             stats.add(teams);
-        }
-        List<Map<Integer, Boolean>> fbFierstTeam = stats.stream().filter(team -> team.containsKey(firstTeamId)).collect(Collectors.toList());
-        killsDto.setFirstTeamFBPercent(getFBPercent(fbFierstTeam));
+        });
+        List<Map<Integer, Boolean>> firstTeam = stats.stream().filter(team -> team.containsKey(firstTeamId)).collect(Collectors.toList());
+        killsDto.setFirstTeamFBPercent(getFBPercent(firstTeam));
         if (secondTeamId != null) {
             List<Map<Integer, Boolean>> fbSecondTeam = stats.stream().filter(team -> team.containsKey(secondTeamId)).collect(Collectors.toList());
             killsDto.setSecondTeamFBPercent(getFBPercent(fbSecondTeam));
