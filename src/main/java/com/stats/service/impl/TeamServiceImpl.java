@@ -9,6 +9,8 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 
 @Service
 public class TeamServiceImpl implements TeamService {
@@ -39,6 +41,11 @@ public class TeamServiceImpl implements TeamService {
         team.setDotaId(jsonTeam.getInt("team_id"));
         team.setName(jsonTeam.getString("name"));
         teamDao.create(team);
+    }
+
+    @Override
+    public List<Teams> list() {
+        return teamDao.list();
     }
 
 

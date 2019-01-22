@@ -1,10 +1,15 @@
 package com.stats.controller;
 
 import com.stats.dto.FormulaDto;
+import com.stats.dto.StatisticDto;
+import com.stats.model.Teams;
 import com.stats.service.FormulaService;
+import com.stats.service.LeagueService;
 import com.stats.service.StatsService;
+import com.stats.service.TeamService;
 import com.stats.utils.Utils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.ui.ModelMap;
@@ -14,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
@@ -21,11 +27,22 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 @Controller
 public class StatisticController {
 
+    @Qualifier("killsStatsService")
     @Autowired
-    StatsService statsService;
+    StatsService killStats;
+
+    @Qualifier("durationStatsService")
+    @Autowired
+    StatsService durationStats;
 
     @Autowired
     FormulaService formulaService;
+
+    @Autowired
+    TeamService teamService;
+
+    @Autowired
+    LeagueService leagueService;
 
     @RequestMapping("/")
     public String index() {
@@ -35,7 +52,8 @@ public class StatisticController {
     @RequestMapping(value = "/stats", method = RequestMethod.GET)
     public ModelAndView stats(Model model) {
         ModelAndView mav = new ModelAndView("stats");
-        mav.addObject("stats", statsService.getStatsParams());
+        List<Teams> teams = teamService.list();
+        mav.addObject("stats", new StatisticDto(teams, teams,leagueService.list()));
         return mav;
     }
 
@@ -57,8 +75,8 @@ public class StatisticController {
         params.put("totalTimes", totalTime);
         params.put("base", true);
         params.put("fbInclude", fbInclude);
-        model.addAttribute("durationDto", statsService.getDurationStats(params));
-        model.addAttribute("killsDto", statsService.getKillsStats(params));
+        model.addAttribute("durationDto", durationStats.getStats(params));
+        model.addAttribute("killsDto", killStats.getStats(params));
         return "baseStats";
     }
 

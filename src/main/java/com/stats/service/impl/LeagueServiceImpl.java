@@ -9,6 +9,8 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class LeagueServiceImpl implements LeagueService {
     @Autowired
@@ -37,5 +39,10 @@ public class LeagueServiceImpl implements LeagueService {
         league.setLeagueId(jsonLeague.getInt("leagueid"));
         league.setName(jsonLeague.getString("name"));
         leagueDao.create(league);
+    }
+
+    @Override
+    public List<Leagues> list() {
+        return leagueDao.list();
     }
 }

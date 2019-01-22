@@ -1,27 +1,24 @@
 package com.stats.service.impl;
 
-
 import com.stats.builders.QuaryBuilder;
 import com.stats.connections.HttpConnection;
 import com.stats.dao.LeagueDao;
 import com.stats.dao.TeamDao;
-import com.stats.dto.DurationDto;
 import com.stats.dto.KillsDto;
-import com.stats.dto.StatisticDto;
-import com.stats.model.Teams;
 import com.stats.service.StatsService;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
-
 @Service
-public class StatsServiceImpl implements StatsService {
-
+public class KillsStatsService implements StatsService {
     @Autowired
     HttpConnection httpConnection;
 
@@ -35,7 +32,7 @@ public class StatsServiceImpl implements StatsService {
     QuaryBuilder quaryBuilder;
 
     @Override
-    public KillsDto getKillsStats(Map params) {
+    public KillsDto getStats(Map params) {
         KillsDto killsDto = null;
         try {
             killsDto = new KillsDto();
@@ -49,38 +46,7 @@ public class StatsServiceImpl implements StatsService {
         return killsDto;
     }
 
-    @Override
-    public DurationDto getDurationStats(Map params) {
-        DurationDto durationDto = null;
-        try {
-            durationDto = new DurationDto();
-            String quary = quaryBuilder.buildQueryForDuration(params);
-            JSONObject baseStats = httpConnection.get("https://api.opendota.com/api/explorer", quary);
-            buildDurationDto(durationDto, baseStats, params);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return durationDto;
-    }
-
-    @Override
-    public StatisticDto getStatsParams() {
-        List<Teams> teams = teamDao.list();
-        StatisticDto statisticDto = new StatisticDto(teams, teams, leagueDao.list());
-        return statisticDto;
-    }
-
-    private JSONObject getStatsBySpecifiedValue(Map params) {
-        JSONObject specifiedStats = null;
-        try {
-            String quary = quaryBuilder.buildQueryBySpecifiedValue(params);
-            specifiedStats = httpConnection.get("https://api.opendota.com/api/explorer", quary);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return specifiedStats;
-    }
-    private KillsDto buildKillsDto(KillsDto killsDto, JSONObject json, Map params) {
+    private void buildKillsDto(KillsDto killsDto, JSONObject json, Map params) {
         Integer killsOfAllMatches = 0;
         int matchCount = json.getJSONArray("rows").length() > 0 ? json.getJSONArray("rows").length() : 1;
         int matchesHigherThenKillPoint = 0;
@@ -132,7 +98,6 @@ public class StatsServiceImpl implements StatsService {
         if ((Boolean) params.get("fbInclude")) {
             buildKillsStats(matchIds, (Integer) params.get("teamId"), (Integer) params.get("teamId2"), killsDto);
         }
-        return killsDto;
     }
 
     private void couriersKills(KillsDto killsDto, Map params, int matchCount) {
@@ -162,63 +127,6 @@ public class StatsServiceImpl implements StatsService {
         }
     }
 
-    private void roshansKillls(KillsDto killsDto, int kills, int matchCount) {
-        killsDto.setAvgRoshanKillsPerMatch(kills, matchCount);
-    }
-    private void buildDurationDto(DurationDto durationDto, JSONObject json, Map params) {
-        int matchCountTeam1 = (Integer) json.getJSONArray("rows").getJSONObject(0).get("count");
-        int matchCountTeam2 = 0;
-        int durationTeam2 = 0;
-        int durationTeam1 = Integer.parseInt(((String) json.getJSONArray("rows").getJSONObject(0).get("avg")).split("\\.", 2)[0]) / 60;
-        //specifiedValue is counts of match where duration is higher then value which we past in input field
-        JSONObject specifiedValue = null;
-        //matchesHigherThenSpecified is counts of match where duration is higher then value which we past in input field
-        int matchesHigherThenSpecified = 0;
-        int matchesHigherThenSpecifiedTeam1 = 0;
-        int matchesHigherThenSpecifiedTeam2 = 0;
-        if (params.get("totalTimes") != null) {
-            specifiedValue = getStatsBySpecifiedValue(params);
-            matchesHigherThenSpecifiedTeam1 = (Integer) specifiedValue.getJSONArray("rows").getJSONObject(0).get("count");
-            if (hasSecondTeam(specifiedValue)) {
-                matchesHigherThenSpecifiedTeam2 = (Integer) specifiedValue.getJSONArray("rows").getJSONObject(1).get("count");
-            }
-            matchesHigherThenSpecified = matchesHigherThenSpecifiedTeam1 + matchesHigherThenSpecifiedTeam2;
-        }
-        if (hasSecondTeam(json)) {
-            matchCountTeam2 = (Integer) json.getJSONArray("rows").getJSONObject(1).get("count");
-            durationTeam2 = Integer.parseInt(((String) json.getJSONArray("rows").getJSONObject(1).get("avg")).split("\\.", 2)[0]) / 60;
-        }
-        int duration = (durationTeam1 + durationTeam2) / json.getJSONArray("rows").length();
-        int allMatchCount = matchCountTeam1 + matchCountTeam2;
-
-        durationDto.setTeamName((String) json.getJSONArray("rows").getJSONObject(0).get("name"));
-        durationDto.setDurationTeam1(durationTeam1);
-        durationDto.setMatchCountTeam1(matchCountTeam1);
-        durationDto.setMatchCount(allMatchCount);
-        durationDto.setDuration(duration);
-        durationDto.setSpecifiedDuration((params.get("totalTimes") != null) ? (int) params.get("totalTimes") : 0);
-        // This value calculate to percent
-        durationDto.setHigherThenSpecifiedTeam1(matchesHigherThenSpecifiedTeam1 * 100 / ((matchCountTeam1 >  0) ? matchCountTeam1 : 1));
-        durationDto.setHigherThenSpecifiedTeam2(matchesHigherThenSpecifiedTeam2 * 100 / ((matchCountTeam2 > 0) ? matchCountTeam2 : 1));
-        durationDto.setDurationHigherThenSpecified(matchesHigherThenSpecified * 100 / allMatchCount);
-        if (hasSecondTeam(json)) {
-            durationDto.setSecondTeamName((String) json.getJSONArray("rows").getJSONObject(1).get("name"));
-            durationDto.setDurationTeam2(durationTeam2);
-            durationDto.setMatchCountTeam2(matchCountTeam2);
-        }
-    }
-
-    private int countNumberOfMatchesPerTeam(int teamCount, Integer radiant_id, Integer dire_id, Integer teamId) {
-        if ((radiant_id.equals(teamId)) || (dire_id.equals(teamId))) {
-            teamCount++;
-        }
-        return teamCount;
-    }
-
-    private boolean hasSecondTeam(JSONObject json) {
-        return json.getJSONArray("rows").length() > 1;
-    }
-
     private void buildKillsStats(List<Long> ids, Integer firstTeamId, Integer secondTeamId, KillsDto killsDto) {
         List<Map<Integer, Boolean>> stats = new ArrayList<>();
         Integer teamId = null;
@@ -232,7 +140,6 @@ public class StatsServiceImpl implements StatsService {
                     if (((JSONObject) player).get("firstblood_claimed") instanceof Integer && 1 == (Integer)((JSONObject) player).get("firstblood_claimed")) {
                         fbRadiant = (boolean) ((JSONObject) player).get("isRadiant");
                     }
-//                   JSONArray killsLog = ((JSONObject) player).getJSONArray("kills_log");
                 }
             }
             fillInFBMap(teams, firstTeamId, secondTeamId, fbRadiant, match);
@@ -260,5 +167,9 @@ public class StatsServiceImpl implements StatsService {
 
     private int getFBPercent(List<Map<Integer, Boolean>> allFb) {
         return allFb.size() > 0 ? (int) allFb.stream().filter(team -> team.containsValue(true)).count() * 100 / (allFb.size() > 0 ? allFb.size() : 1) : 0;
+    }
+
+    private void roshansKillls(KillsDto killsDto, int kills, int matchCount) {
+        killsDto.setAvgRoshanKillsPerMatch(kills, matchCount);
     }
 }

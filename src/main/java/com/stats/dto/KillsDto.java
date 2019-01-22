@@ -82,7 +82,7 @@ public class KillsDto {
     }
 
     public void setTotalKillsPercentTeam2(int totalKillsPercentTeam2, int matchCount) {
-        this.totalKillsPercentTeam2 = totalKillsPercentTeam2 * 100 / ((matchCount > 0) ? matchCount : 0);;
+        this.totalKillsPercentTeam2 = totalKillsPercentTeam2 * 100 / ((matchCount > 0) ? matchCount : 1);;
     }
 
     public int getCouriersKills() {
@@ -90,7 +90,7 @@ public class KillsDto {
     }
 
     public void setCouriersKills(int couriersKills, int matchCount) {
-        this.couriersKills = couriersKills * 100 / ((matchCount > 0) ? matchCount : 0);
+        this.couriersKills = couriersKills * 100 / ((matchCount > 0) ? matchCount : 1);
     }
 
     public int getAvgRoshanKillsPerMatch() {
@@ -98,6 +98,6 @@ public class KillsDto {
     }
 
     public void setAvgRoshanKillsPerMatch(int avgRoshanKillsPerMatch, int matchCount) {
-        this.avgRoshanKillsPerMatch = avgRoshanKillsPerMatch / ((matchCount > 0) ? matchCount : 0);
+        this.avgRoshanKillsPerMatch = avgRoshanKillsPerMatch / ((matchCount > 0) ? matchCount : 1);
     }
 }
