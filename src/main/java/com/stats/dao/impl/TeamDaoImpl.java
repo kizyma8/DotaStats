@@ -12,7 +12,7 @@ import java.util.List;
 @Repository
 public class TeamDaoImpl implements TeamDao {
     @PersistenceContext
-    EntityManager entityManager;
+    private EntityManager entityManager;
 
     @Override
     public void create(Teams team) {

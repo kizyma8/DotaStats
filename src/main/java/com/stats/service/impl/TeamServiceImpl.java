@@ -26,13 +26,9 @@ public class TeamServiceImpl implements TeamService {
 
     @Override
     public void create(Teams team) {
-        try {
             String quary = quaryBuilder.buildGetTeamQuary(team);
             JSONObject json = httpConnection.get("https://api.opendota.com/api/explorer",quary);
             addTeams(json, team);
-        } catch (Exception ex){
-
-        }
     }
 
     @Override

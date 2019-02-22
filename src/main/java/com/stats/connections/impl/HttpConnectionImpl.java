@@ -3,6 +3,7 @@ package com.stats.connections.impl;
 import com.stats.connections.HttpConnection;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Component;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.URISyntaxException;
 import java.util.Map;
 
 import static org.apache.http.HttpHeaders.USER_AGENT;
@@ -32,10 +34,12 @@ public class HttpConnectionImpl implements HttpConnection {
 
             System.out.println("Response Code : "
                     + response.getStatusLine().getStatusCode());
-
-
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (URISyntaxException ex) {
+            System.out.println("Uri exception " + ex.getMessage());
+        } catch (HttpResponseException e) {
+            System.out.println("HttpResponse exception " + e.getMessage());
+        } catch (IOException exe) {
+            System.out.println(exe.getMessage());
         }
         return parseResponse(response);
     }
@@ -54,9 +58,7 @@ public class HttpConnectionImpl implements HttpConnection {
             json = new JSONObject(result.toString());
 
         } catch (IOException e) {
-            e.printStackTrace();
-        } catch (Exception e){
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
         return json;
     }

@@ -8,7 +8,7 @@ import java.util.Map;
 @Service
 public class FormulaServiceImpl implements FormulaService {
     @Override
-    public double calculateNextBet(Map<String,Double> params) {
+    public double calculateNextBet(Map<String, Double> params) {
         double coeff = params.get("coeff");
         double moneyLost = params.get("moneyLost");
         double profit = params.get("profit") + moneyLost;

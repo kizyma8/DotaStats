@@ -24,18 +24,14 @@ public class LeagueServiceImpl implements LeagueService {
 
     @Override
     public void create(Leagues league) {
-        try {
-            String quary = quaryBuilder.buildGetLeagueQuary(league);
-            JSONObject json = httpConnection.get("https://api.opendota.com/api/explorer",quary);
-            addLeague(json, league);
-        } catch (Exception ex){
-
-        }
+        String quary = quaryBuilder.buildGetLeagueQuary(league);
+        JSONObject json = httpConnection.get("https://api.opendota.com/api/explorer", quary);
+        addLeague(json, league);
     }
 
     @Override
     public void addLeague(JSONObject leagues, Leagues league) {
-        JSONObject jsonLeague =  leagues.getJSONArray("rows").getJSONObject(0);
+        JSONObject jsonLeague = leagues.getJSONArray("rows").getJSONObject(0);
         league.setLeagueId(jsonLeague.getInt("leagueid"));
         league.setName(jsonLeague.getString("name"));
         leagueDao.create(league);

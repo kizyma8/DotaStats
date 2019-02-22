@@ -10,9 +10,9 @@ import javax.persistence.PersistenceContext;
 import java.util.List;
 
 @Repository
-public class LeagueDtoImpl implements LeagueDao {
+public class LeagueDaoImpl implements LeagueDao {
     @PersistenceContext
-    EntityManager entityManager;
+    private EntityManager entityManager;
 
     @Override
     public void create(Leagues league) {

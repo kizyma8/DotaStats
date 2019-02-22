@@ -20,7 +20,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Service
-public class KillsStatsService implements StatsService {
+public class KillsStatsServiceImpl implements StatsService {
     @Autowired
     HttpConnection httpConnection;
 
@@ -36,14 +36,10 @@ public class KillsStatsService implements StatsService {
     @Override
     public KillsDto getStats(Map params) {
         KillsDto killsDto = null;
-        try {
-            killsDto = new KillsDto();
-            String quary = quaryBuilder.buildQueryForKills(params);
-            JSONObject baseStats = httpConnection.get("https://api.opendota.com/api/explorer", quary);
-            buildKillsDto(killsDto, baseStats, params);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+        killsDto = new KillsDto();
+        String quary = quaryBuilder.buildQueryForKills(params);
+        JSONObject baseStats = httpConnection.get("https://api.opendota.com/api/explorer", quary);
+        buildKillsDto(killsDto, baseStats, params);
         return killsDto;
     }
 
@@ -61,15 +57,15 @@ public class KillsStatsService implements StatsService {
         int matchesHigherThenSpecifiedTeam1 = 0;
         int matchesHigherThenSpecifiedTeam2 = 0;
         List<Long> matchIds = new ArrayList<>();
-        BiPredicate<Integer,Integer> isEquals = Integer::equals;
+        BiPredicate<Integer, Integer> isEquals = Integer::equals;
         for (int i = 0; i < json.getJSONArray("rows").length(); i++) {
             total = (Integer) json.getJSONArray("rows").getJSONObject(i).get("total");
             matchIds.add((Long) json.getJSONArray("rows").getJSONObject(i).get("match_id"));
 
-            if (isEquals.test((Integer) json.getJSONArray("rows").getJSONObject(i).get("team_id"),(Integer) params.get("teamId"))) {
+            if (isEquals.test((Integer) json.getJSONArray("rows").getJSONObject(i).get("team_id"), (Integer) params.get("teamId"))) {
                 killsTeam1 += total;
                 matchesHigherThenSpecifiedTeam1++;
-            } else if(isEquals.test((Integer) json.getJSONArray("rows").getJSONObject(i).get("team_id"),(Integer) params.get("teamId2"))){
+            } else if (isEquals.test((Integer) json.getJSONArray("rows").getJSONObject(i).get("team_id"), (Integer) params.get("teamId2"))) {
                 killsTeam2 += total;
                 matchesHigherThenSpecifiedTeam2++;
             }
@@ -87,14 +83,14 @@ public class KillsStatsService implements StatsService {
                 }
             }
         }
-        couriersKills(killsDto,params,matchCount);
+        couriersKills(killsDto, params, matchCount);
         killsDto.setKills(killsOfAllMatches, matchCount);
         killsDto.setKillsTeam1(killsTeam1, (matchesHigherThenSpecifiedTeam1 > 0) ? matchesHigherThenSpecifiedTeam1 : 1);
-        killsDto.setKillsTeam2(killsTeam2, (matchesHigherThenSpecifiedTeam2 > 0)? matchesHigherThenSpecifiedTeam2 : 1);
+        killsDto.setKillsTeam2(killsTeam2, (matchesHigherThenSpecifiedTeam2 > 0) ? matchesHigherThenSpecifiedTeam2 : 1);
         killsDto.setTotalKills(params.get("totalKills") != null ? (Integer) params.get("totalKills") : 0);
         killsDto.setTotalKillsPercent(matchesHigherThenKillPoint, matchCount);
-        killsDto.setTotalKillsPercentTeam1(matchesHigherThenKillPointTeam1,team1Matches);
-        killsDto.setTotalKillsPercentTeam2(matchesHigherThenKillPointTeam2,team2Matches);
+        killsDto.setTotalKillsPercentTeam1(matchesHigherThenKillPointTeam1, team1Matches);
+        killsDto.setTotalKillsPercentTeam2(matchesHigherThenKillPointTeam2, team2Matches);
 
         if ((Boolean) params.get("fbInclude")) {
             buildKillsStats(matchIds, (Integer) params.get("teamId"), (Integer) params.get("teamId2"), killsDto);
@@ -111,18 +107,18 @@ public class KillsStatsService implements StatsService {
             boolean breakCounting = false;
             for (int i = 0; i < json.getJSONArray("rows").length(); i++) {
                 breakCounting = false;
-                for(int j = 0; j < json.getJSONArray("rows").getJSONObject(i).getJSONArray("objectives").length(); j++) {
-                    if(!breakCounting && "CHAT_MESSAGE_COURIER_LOST".equals(json.getJSONArray("rows").getJSONObject(i).getJSONArray("objectives").getJSONObject(j).get("type"))) {
+                for (int j = 0; j < json.getJSONArray("rows").getJSONObject(i).getJSONArray("objectives").length(); j++) {
+                    if (!breakCounting && "CHAT_MESSAGE_COURIER_LOST".equals(json.getJSONArray("rows").getJSONObject(i).getJSONArray("objectives").getJSONObject(j).get("type"))) {
                         matchesWithCouriersKills++;
                         breakCounting = true;
                     }
-                    if("CHAT_MESSAGE_ROSHAN_KILL".equals(json.getJSONArray("rows").getJSONObject(i).getJSONArray("objectives").getJSONObject(j).get("type"))) {
+                    if ("CHAT_MESSAGE_ROSHAN_KILL".equals(json.getJSONArray("rows").getJSONObject(i).getJSONArray("objectives").getJSONObject(j).get("type"))) {
                         roshanKills++;
                     }
                 }
             }
-            killsDto.setCouriersKills(matchesWithCouriersKills,matchCount);
-            roshansKillls(killsDto,roshanKills,matchCount);
+            killsDto.setCouriersKills(matchesWithCouriersKills, matchCount);
+            roshansKillls(killsDto, roshanKills, matchCount);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -138,7 +134,7 @@ public class KillsStatsService implements StatsService {
             JSONArray players = match.getJSONArray("players");
             for (Object player : players) {
                 if (player instanceof JSONObject) {
-                    if (((JSONObject) player).get("firstblood_claimed") instanceof Integer && 1 == (Integer)((JSONObject) player).get("firstblood_claimed")) {
+                    if (((JSONObject) player).get("firstblood_claimed") instanceof Integer && 1 == (Integer) ((JSONObject) player).get("firstblood_claimed")) {
                         fbRadiant = (boolean) ((JSONObject) player).get("isRadiant");
                     }
                 }

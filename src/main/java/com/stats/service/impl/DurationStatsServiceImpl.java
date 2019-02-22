@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.function.Predicate;
 
 @Service
-public class DurationStatsService implements StatsService {
+public class DurationStatsServiceImpl implements StatsService {
     @Autowired
     HttpConnection httpConnection;
 
@@ -29,15 +29,11 @@ public class DurationStatsService implements StatsService {
 
     @Override
     public DurationDto getStats(Map params) {
-        DurationDto durationDto = null;
-        try {
+            DurationDto durationDto = null;
             durationDto = new DurationDto();
             String quary = quaryBuilder.buildQueryForDuration(params);
             JSONObject baseStats = httpConnection.get("https://api.opendota.com/api/explorer", quary);
             buildDurationDto(durationDto, baseStats, params);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
         return durationDto;
     }
 
